@@ -1,0 +1,7 @@
+ligtning_logs
+__pycache__
+.ipynb_checkpoints
+.vscode
+checkpoints
+visualization
+temp

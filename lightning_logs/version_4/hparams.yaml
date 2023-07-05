@@ -1,0 +1,10 @@
+dropout: 0.3
+lr: 0.0005
+model:
+  model_args:
+    n_layers: 4
+  model_class: !!python/name:models.GCN.GCNSelsam ''
+n_classes: 2
+n_features: 5
+n_hidden: 128
+weight_decay: 0.0005

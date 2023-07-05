@@ -1,0 +1,38 @@
+loss_fn: !!python/object:torch.nn.modules.loss.BCEWithLogitsLoss
+  _backward_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _buffers: !!python/object/apply:collections.OrderedDict
+  - - - weight
+      - null
+    - - pos_weight
+      - null
+  _forward_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _forward_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _is_full_backward_hook: null
+  _load_state_dict_post_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _load_state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  _modules: !!python/object/apply:collections.OrderedDict
+  - []
+  _non_persistent_buffers_set: !!set {}
+  _parameters: !!python/object/apply:collections.OrderedDict
+  - []
+  _state_dict_hooks: !!python/object/apply:collections.OrderedDict
+  - []
+  reduction: mean
+  training: true
+lr: 0.0002
+model:
+  model_args:
+    d: 16
+    final_reducer: mean
+    lstm: standard
+    mlp_transfer_fn: relu
+    n_msg_layers: 3
+    n_rounds: 10
+    n_vote_layers: 3
+  model_class: !!python/name:models.neurosat_architecture.NeuroSAT ''
+weight_decay: 1.0e-10

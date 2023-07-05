@@ -1,0 +1,17 @@
+dropout: 0.2
+lr: 0.0005
+model:
+  model_args:
+    d: 128
+    final_reducer: mean
+    lstm: layernorm
+    mlp_transfer_fn: relu
+    n_msg_layers: 3
+    n_rounds: 5
+    n_vote_layers: 3
+  model_class: !!python/name:models.neurosat_architecture.NeuroSAT ''
+n_classes: 2
+n_features: 5
+n_hidden: 32
+selsam: true
+weight_decay: 0.0005
