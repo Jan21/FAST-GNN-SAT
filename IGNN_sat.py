@@ -127,6 +127,8 @@ def incremental_train_IGNN_sat(model,
     print('val sizes: ',val_sizes)
     # train on each size incrementally
     for s in train_sizes:
+        if s < 10:
+            continue
         trainer = pl.Trainer(max_epochs=max_epochs, gpus=gpus,gradient_clip_val=grad_clip)
         if additive_incremental:
             train_dataset_ = [] 
@@ -152,16 +154,16 @@ if __name__ == '__main__':
     lr = 2e-4
     weight_decay = 1e-10
     model_name = 'NeuroSAT'
-    checkpoint = 'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
+    checkpoint = None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
     
-    data_path = 'temp/cnfs/selsam_10_40'
+    data_path = 'temp/cnfs/selsam_3_10'
     
     incremental = True
-    batch_size = 256
+    batch_size = 128
     gpus = [0]
     grad_clip = 0.65
     num_iters = 26
-    max_epochs = 50
+    max_epochs = 30
     
     # create dataset and model
     dataset = get_CNF_dataset(data_path)

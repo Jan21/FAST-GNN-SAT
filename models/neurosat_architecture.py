@@ -137,8 +137,9 @@ class NeuroSAT(nn.Module):
         x_c_h = torch.zeros(x_c.shape).to(data.x_l.device)
 
         for t in range(num_iters):
-            x_c, x_c_h = self.LC_msgs(adj_t, x_l, x_c, x_c_h)
-            x_l, x_l_h = self.CL_msgs(adj_t, x_c, x_l, x_l_h, x_l_batch)
+            x_c_, x_c_h = self.LC_msgs(adj_t, x_l, x_c, x_c_h)
+            x_l, x_l_h = self.CL_msgs(adj_t, x_c_, x_l, x_l_h, x_l_batch)
+            x_c = x_c_
         #return x_l
         x_l_vote = self.L_vote(x_l)
 
