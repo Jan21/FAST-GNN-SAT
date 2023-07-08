@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument('--py_seed', action='store', dest='py_seed', type=int, default=None)
     parser.add_argument('--np_seed', action='store', dest='np_seed', type=int, default=None)
 
-    parser.add_argument('--print_interval', action='store', dest='print_interval', type=int, default=100)
+    parser.add_argument('--print_interval', action='store', dest='print_interval', type=int, default=10000)
     opts = parser.parse_args()
 
     if opts.py_seed is not None: random.seed(opts.py_seed)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     for pair in range(opts.n_pairs):
         if pair % opts.print_interval == 0: print("[%d]" % pair)
         n_vars, iclauses, iclause_unsat, iclause_sat = gen_iclause_pair(opts)
-        print(iclauses)
+        #print(iclauses)
         out_filenames = mk_out_filenames(opts, n_vars, pair)
 
         iclauses.append(iclause_unsat)
