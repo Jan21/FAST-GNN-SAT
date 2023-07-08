@@ -130,6 +130,8 @@ def incremental_train_IGNN_sat(model,
     # train on each size incrementally
     threshs = np.linspace(0.5, 0.86, len(train_sizes))
     for i,s in enumerate(train_sizes):
+        if i%2==0:
+            continue
         if s < 10:
             continue
         print('current thresh: ',threshs[i])
@@ -142,11 +144,12 @@ def incremental_train_IGNN_sat(model,
                                                      stopping_threshold = threshs[i],
                                                      mode = 'max')])
         if additive_incremental:
-            train_dataset_ = [] 
+            train_dataset_ = train_dataset[s]
+            num_probs_of_size_s_ = len(train_dataset_)//i
             for s_ in train_sizes:
-                if s_ > s:
+                if s_ >= s:
                     break
-                train_dataset_ += train_dataset[s_]
+                train_dataset_ += train_dataset[s_][:num_probs_of_size_s_]
         else:
             train_dataset_ = train_dataset[s]
         model.num_iters=min(26,max(6,s//2))
