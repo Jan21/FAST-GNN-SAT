@@ -8,6 +8,8 @@ import numpy as np
 import random
 from datasets.selsam import get_CNF_dataset
 from pytorch_lightning.callbacks import TQDMProgressBar
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
 from collections import defaultdict
 
 # pytorch lightning model
@@ -45,7 +47,7 @@ class IGNN_sat(pl.LightningModule):
         num_total = len(y)
         acc = num_correct / num_total
         loss = self.loss_fn(y_hat.squeeze(), y.type_as(y_hat))
-        self.log('val_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('val_acc', acc, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log('val_loss', loss)
         return loss
 
@@ -126,10 +128,19 @@ def incremental_train_IGNN_sat(model,
     val_sizes = sorted(val_dataset.keys())
     print('val sizes: ',val_sizes)
     # train on each size incrementally
-    for s in train_sizes:
+    threshs = np.linspace(0.5, 0.86, len(train_sizes))
+    for i,s in enumerate(train_sizes):
         if s < 10:
             continue
-        trainer = pl.Trainer(max_epochs=max_epochs, gpus=gpus,gradient_clip_val=grad_clip)
+        print('current thresh: ',threshs[i])
+        trainer = pl.Trainer(max_epochs=max_epochs, 
+                             gpus=gpus,
+                             gradient_clip_val=grad_clip,
+                            callbacks=[EarlyStopping(monitor="val_acc", 
+                                                     patience=max_epochs,
+                                                     check_on_train_epoch_end = False,
+                                                     stopping_threshold = threshs[i],
+                                                     mode = 'max')])
         if additive_incremental:
             train_dataset_ = [] 
             for s_ in train_sizes:
@@ -151,19 +162,19 @@ if __name__ == '__main__':
     np.random.seed(seed)
     random.seed(seed)
     # set hyperparameters
-    lr = 2e-4
+    lr = 2e-3
     weight_decay = 1e-10
     model_name = 'NeuroSAT'
     checkpoint = None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
     
-    data_path = 'temp/cnfs/selsam_3_10'
+    data_path = 'temp/cnfs/selsam_3_40'
     
     incremental = True
     batch_size = 128
     gpus = [0]
     grad_clip = 0.65
     num_iters = 26
-    max_epochs = 30
+    max_epochs = 50
     
     # create dataset and model
     dataset = get_CNF_dataset(data_path)
