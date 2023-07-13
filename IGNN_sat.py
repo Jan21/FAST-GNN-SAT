@@ -36,7 +36,7 @@ class IGNN_sat(pl.LightningModule):
         y = batch.y
         y_hat = self(batch)
         loss = self.loss_fn(y_hat.squeeze(), y.type_as(y_hat))
-        self.log('train_loss', loss)
+        self.log('train_loss',loss,prog_bar=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -120,6 +120,7 @@ def incremental_train_IGNN_sat(model,
                                 max_epochs,
                                 gpus,
                                 grad_clip,
+                                num_steps,
                                 additive_incremental=True): 
     train_dataset = group_data(dataset[0])
     val_dataset = group_data(dataset[1])
@@ -128,31 +129,38 @@ def incremental_train_IGNN_sat(model,
     val_sizes = sorted(val_dataset.keys())
     print('val sizes: ',val_sizes)
     # train on each size incrementally
-    threshs = np.linspace(0.5, 0.86, len(train_sizes))
+    threshs = np.linspace(0.65, 0.85, len(train_sizes))
     for i,s in enumerate(train_sizes):
-        if i%2==0:
-            continue
+        #if i%2==0 and s > 20:
+        #    continue
         if s < 10:
             continue
+        if s < train_sizes[-1]:
+            thresh = threshs[i]
+        else:
+            thresh = 0.9
         print('current thresh: ',threshs[i])
         trainer = pl.Trainer(max_epochs=max_epochs, 
-                             gpus=gpus,
-                             gradient_clip_val=grad_clip,
+                            #gpus=gpus,
+                            gradient_clip_val=grad_clip,
                             callbacks=[EarlyStopping(monitor="val_acc", 
-                                                     patience=max_epochs,
-                                                     check_on_train_epoch_end = False,
-                                                     stopping_threshold = threshs[i],
-                                                     mode = 'max')])
+                                                    patience=max_epochs,
+                                                    check_on_train_epoch_end = False,
+                                                    stopping_threshold = thresh,
+                                                    mode = 'max')])
         if additive_incremental:
+            num_last_k_sizes = 5
             train_dataset_ = train_dataset[s]
-            num_probs_of_size_s_ = len(train_dataset_)//i
+            num_probs_of_size_s_ = len(train_dataset_) #//min(i,num_last_k_sizes)
             for s_ in train_sizes:
+                if s_ < (s-2*num_last_k_sizes):
+                  continue
                 if s_ >= s:
                     break
                 train_dataset_ += train_dataset[s_][:num_probs_of_size_s_]
         else:
             train_dataset_ = train_dataset[s]
-        model.num_iters=min(26,max(6,s//2))
+        model.num_iters=min(num_steps,max(6,s//2))
         print(len(train_dataset_))
         print(f"Training on size {s}")
         dataset_ = [train_dataset_,val_dataset[s],val_dataset[s]]
@@ -169,15 +177,15 @@ if __name__ == '__main__':
     weight_decay = 1e-10
     model_name = 'NeuroSAT'
     checkpoint = None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
-    
+    #checkpoint = 'lightning_logs/colab/epoch=4-step=175.ckpt'
     data_path = 'temp/cnfs/selsam_3_40'
     
     incremental = True
     batch_size = 128
     gpus = [0]
     grad_clip = 0.65
-    num_iters = 26
-    max_epochs = 50
+    num_iters = 30
+    max_epochs = 200
     
     # create dataset and model
     dataset = get_CNF_dataset(data_path)
@@ -196,7 +204,8 @@ if __name__ == '__main__':
                                            batch_size,
                                            max_epochs,
                                            gpus,
-                                           grad_clip)                                  
+                                           grad_clip,
+                                           num_iters)                                  
     else:
         model = train_IGNN_sat(model,
                             dataset,
