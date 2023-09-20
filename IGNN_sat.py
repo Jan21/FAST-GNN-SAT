@@ -138,7 +138,7 @@ def incremental_train_IGNN_sat(model,
         if s < train_sizes[-1]:
             thresh = threshs[i]
         else:
-            thresh = 0.9
+            thresh = 0.85
         print('current thresh: ',threshs[i])
         trainer = pl.Trainer(max_epochs=max_epochs, 
                             #gpus=gpus,
