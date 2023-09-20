@@ -101,7 +101,6 @@ class NeuroSAT(nn.Module):
     def __init__(self, d,
                  n_msg_layers,
                  n_vote_layers,
-                 n_rounds,
                  mlp_transfer_fn = 'relu',
                  final_reducer = 'mean',
                  lstm = 'standard'
@@ -109,7 +108,6 @@ class NeuroSAT(nn.Module):
         super(NeuroSAT, self).__init__()
 
         self.d = d
-        self.n_rounds = n_rounds
         self.final_reducer = final_reducer
         self.init_ts = torch.ones(1)
         self.init_ts.requires_grad = False
