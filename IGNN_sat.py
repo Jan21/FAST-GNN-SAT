@@ -206,8 +206,8 @@ if __name__ == '__main__':
                                            max_epochs,
                                            gpus,
                                            grad_clip,
-                                           logger
-                                           num_iters)                                  
+                                           num_iters,
+                                           logger)                                  
     else:
         model = train_IGNN_sat(model,
                             dataset,
