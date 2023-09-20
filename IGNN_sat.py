@@ -129,16 +129,13 @@ def incremental_train_IGNN_sat(model,
     val_sizes = sorted(val_dataset.keys())
     print('val sizes: ',val_sizes)
     # train on each size incrementally
-    threshs = np.linspace(0.65, 0.84, len(train_sizes))
+    threshs = np.linspace(0.65, 0.85, len(train_sizes))
     for i,s in enumerate(train_sizes):
         #if i%2==0 and s > 20:
         #    continue
         if s < 10:
             continue
-        if s < train_sizes[-1]:
-            thresh = threshs[i]
-        else:
-            thresh = 0.85
+        thresh = threshs[i]
         print('current thresh: ',threshs[i])
         trainer = pl.Trainer(max_epochs=max_epochs, 
                             #gpus=gpus,
