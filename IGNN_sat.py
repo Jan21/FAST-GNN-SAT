@@ -9,6 +9,7 @@ import random
 from datasets.selsam import get_CNF_dataset
 from pytorch_lightning.callbacks import TQDMProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from collections import defaultdict
 
@@ -121,6 +122,7 @@ def incremental_train_IGNN_sat(model,
                                 gpus,
                                 grad_clip,
                                 num_steps,
+                                logger=logger
                                 additive_incremental=True): 
     train_dataset = group_data(dataset[0])
     val_dataset = group_data(dataset[1])
@@ -173,6 +175,8 @@ if __name__ == '__main__':
     lr = 2e-3
     weight_decay = 1e-10
     model_name = 'NeuroSAT'
+    logger = TensorBoardLogger("temp/tb_logs", name="Final",)
+
     checkpoint = None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
     #checkpoint = 'lightning_logs/colab/epoch=4-step=175.ckpt'
     data_path = 'temp/cnfs/selsam_3_40'
@@ -202,6 +206,7 @@ if __name__ == '__main__':
                                            max_epochs,
                                            gpus,
                                            grad_clip,
+                                           logger
                                            num_iters)                                  
     else:
         model = train_IGNN_sat(model,
