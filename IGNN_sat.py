@@ -122,7 +122,7 @@ def incremental_train_IGNN_sat(model,
                                 gpus,
                                 grad_clip,
                                 num_steps,
-                                logger=logger
+                                logger,
                                 additive_incremental=True): 
     train_dataset = group_data(dataset[0])
     val_dataset = group_data(dataset[1])
@@ -141,6 +141,7 @@ def incremental_train_IGNN_sat(model,
         print('current thresh: ',threshs[i])
         trainer = pl.Trainer(max_epochs=max_epochs, 
                             #gpus=gpus,
+                            logger=logger,
                             gradient_clip_val=grad_clip,
                             callbacks=[EarlyStopping(monitor="val_acc", 
                                                     patience=max_epochs,
