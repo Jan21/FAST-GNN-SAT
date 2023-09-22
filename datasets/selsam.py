@@ -200,8 +200,10 @@ class InMemorySATDataset(InMemoryDataset):
 
 def get_CNF_dataset(dataset_folder):
     dimacs_dir_train = osp.join(dataset_folder,"train")
+    dimacs_dir_val = osp.join(dataset_folder,"val")
     dimacs_dir_test = osp.join(dataset_folder,"test")
     d = 128
     dataset_train = InMemorySATDataset(dimacs_dir_train, d)
+    dataset_val = InMemorySATDataset(dimacs_dir_val, d)
     dataset_test = InMemorySATDataset(dimacs_dir_test, d)
-    return [dataset_train, dataset_test, dataset_test]
+    return [dataset_train, dataset_val, dataset_test]

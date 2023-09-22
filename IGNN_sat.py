@@ -6,6 +6,7 @@ from torch_geometric.data import DataLoader
 from models import *
 import numpy as np
 import random
+import time
 from datasets.selsam import get_CNF_dataset
 from pytorch_lightning.callbacks import TQDMProgressBar
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -95,11 +96,14 @@ def train_IGNN_sat(model,
                    max_epochs,
                    gpus,
                    grad_clip,
-                   num_iters):
+                   num_iters,
+                   logger):
 
     model.num_iters = num_iters
     data = IGNN_sat_data(dataset, batch_size)
-    trainer = pl.Trainer(max_epochs=max_epochs, gpus=gpus,gradient_clip_val=grad_clip)
+    trainer = pl.Trainer(max_epochs=max_epochs, 
+                         logger=logger,
+                         gradient_clip_val=grad_clip)
     trainer.fit(model, data)
     return model
 
@@ -132,7 +136,9 @@ def incremental_train_IGNN_sat(model,
     print('val sizes: ',val_sizes)
     # train on each size incrementally
     threshs = np.linspace(0.65, 0.85, len(train_sizes))
+    results_per_size = []
     for i,s in enumerate(train_sizes):
+        start = time.time()
         #if i%2==0 and s > 20:
         #    continue
         if s < 10:
@@ -165,7 +171,12 @@ def incremental_train_IGNN_sat(model,
         print(f"Training on size {s}")
         dataset_ = [train_dataset_,val_dataset[s],val_dataset[s]]
         data = IGNN_sat_data(dataset_, batch_size)
-        trainer.fit(model, data) 
+        trainer.fit(model, data)
+        end = time.time()
+        t_diff = end-start
+        res = trainer.validate(model, dataset[2])
+        results_per_size.append((res,t_diff))
+    return results_per_size
                              
 if __name__ == '__main__':
     seed = 0
@@ -216,4 +227,5 @@ if __name__ == '__main__':
                             max_epochs,
                             gpus,
                             grad_clip,
-                            num_iters)
+                            num_iters,
+                            logger)
