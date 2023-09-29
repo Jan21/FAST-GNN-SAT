@@ -1,32 +1,56 @@
-
 import torch
+import pytorch_lightning as pl
+class Pl_model_wrapper(pl.LightningModule):
+    def __init__(self, 
+                 model, 
+                 lr, 
+                 weight_decay,
+                 loss_fn,
+                 return_embs = False
+                ):
+        super(Pl_model_wrapper, self).__init__()
+        self.save_hyperparameters()
+        self.lr = lr
+        self.weight_decay = weight_decay
+        model_class = model['model_class']
+        model_args = model['model_args']
+        if return_embs:
+            model_args['return_embs'] = True
+        self.model = model_class(**model_args)
+        self.loss_fn = loss_fn
 
-# save model
-def save_model(model, path):
-    torch.save(model.state_dict(), path)
+    def forward(self, batch):
+        return self.model(batch,self.num_iters)
 
-def load_model(model, path):
-    model.load_state_dict(torch.load(path))
-    return model
+    def training_step(self, batch, batch_idx):
+        y = batch.y
+        y_hat = self(batch)
+        loss = self.loss_fn(y_hat.squeeze(), y.type_as(y_hat))
+        self.log('train_loss',loss,prog_bar=True, logger=True)
+        return loss
 
-def test_model(model, dataset):
-    model.eval()
-    test = dataset
-    acc = 0
-    for data in test:
-        #x = data.x
-        #edge_index = data.edge_index
-        y = data.y
-        y_hat = model(data)
+    def validation_step(self, batch, batch_idx):
+        y = batch.y
+        y_hat = self(batch)
+        pred_binary = torch.sigmoid(y_hat.squeeze()) >= 0.5
+        num_correct = (pred_binary == y.type_as(y_hat)).sum().item()
+        num_total = len(y)
+        acc = num_correct / num_total
+        loss = self.loss_fn(y_hat.squeeze(), y.type_as(y_hat))
+        self.log('val_acc', acc, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log('val_loss', loss)
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        y = batch.y
+        y_hat = self(batch)
+        loss = self.loss_fn(y_hat, y)
+        self.log('test_loss', loss)
         pred =  y_hat.max(dim=1)[1]
-        acc += pred.eq(y).sum()
-    acc = acc.item() / len(test)
-    return acc
+        acc = pred.eq(y).sum().item() / y.shape[0]
+        self.log('test_acc', acc)
+        return loss
 
-def save_results(results, path):
-    with open(path, 'w') as f:
-        for item in results:
-            f.write("%s " % item)
-            f .write("\n")
-
-
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        return optimizer

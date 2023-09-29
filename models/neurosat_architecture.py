@@ -1,22 +1,9 @@
-'''
-Definitions of the NeuroSAT layers.
-'''
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 from torch_geometric.nn import MessagePassing, global_mean_pool
 from torch_geometric.nn import TransformerConv
 from torch_sparse import matmul
 from torch_geometric.typing import Adj, Size
-
-from collections import Counter
-import time
-
-import matplotlib.pyplot as plt
-
-import logging
 
 class LCMessages(MessagePassing):
     def __init__(self, d):
@@ -99,15 +86,17 @@ class CLMessages(MessagePassing):
 class NeuroSAT(nn.Module):
 
     def __init__(self, d,
-                 n_msg_layers,
-                 n_vote_layers,
+                 n_msg_layers=0,
+                 n_vote_layers=0,
                  mlp_transfer_fn = 'relu',
                  final_reducer = 'mean',
-                 lstm = 'standard'
+                 lstm = 'standard',
+                 return_embs = False,
                 ):
         super(NeuroSAT, self).__init__()
 
         self.d = d
+        self.return_embs = return_embs
         self.final_reducer = final_reducer
         self.init_ts = torch.ones(1)
         self.init_ts.requires_grad = False
@@ -141,6 +130,11 @@ class NeuroSAT(nn.Module):
         #return x_l
         x_l_vote = self.L_vote(x_l)
 
+        if self.return_embs:
+            # group by x_l_batch
+            x_l_ = [x_l[x_l_batch==i] for i in range(data.x_l_batch.max()+1)]
+            x_l_vote_ = [x_l_vote[x_l_batch==i] for i in range(data.x_l_batch.max()+1)]
+            return x_l_,x_l_vote_,global_mean_pool(x_l_vote, x_l_batch)
         if self.final_reducer == 'mean':
             logits_average_vote = global_mean_pool(x_l_vote, x_l_batch)
         else:
