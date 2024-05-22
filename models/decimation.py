@@ -116,6 +116,8 @@ def get_processed_data(filtered, d, k, model, num_iters, folder_name):
     for file_name in tqdm.tqdm(filtered):
             n_vars, clauses = InMemorySATDataset.parse_dimacs(None,folder_name+file_name)
             res = process_one(n_vars, clauses, d, k, model, num_iters)
+            if not res:
+                continue
             res['file_name'] = file_name
             data.append(res)
     return data

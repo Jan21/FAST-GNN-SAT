@@ -20,6 +20,8 @@ from models.decimation import process_one,\
                     try_assignments_and_return_not_solved,\
                     get_assignments_from_embs
 
+import argparse
+
 def test(model,
          folder_name,
          num_iters,
@@ -79,6 +81,17 @@ def test(model,
     print('num_total',num_total)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run test')
+    parser.add_argument('--checkpoint', type=str, help='Path to model checkpoint')
+    parser.add_argument('--datapath', type=str, help='Path to SAT data directory')
+    parser.add_argument('--ccpath', type=str, help='Path to cluster centers pickle')
+    parser.add_argument('--k', type=int, help='Parameter k')
+    parser.add_argument('--dec', type=int, help='Use decimation')
+    parser.add_argument('--num_iters', type=int, help='Number of iterations')
+    args = parser.parse_args()
+
+
+
     seed = 0
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -87,17 +100,17 @@ if __name__ == '__main__':
     weight_decay = 1e-10
     model_name = 'NeuroSAT'
 
-    checkpoint = 'temp/tb_logs/Final/version_0/checkpoints/epoch=32-step=891.ckpt' #TODO args   
+    checkpoint = args.checkpoint #TODO args   
     #checkpoint = 'lightning_logs/colab/epoch=4-step=175.ckpt'
-    data_path = 'temp/cnfs/sudoku/sudoku_up_data_3/test/' # TODO args
+    data_path = args.datapath
     #data_path = 'temp/cnfs/selsam_3_40/test/'
     #data_path = 'temp/cnfs/bv/'
-    with open('temp/cluster_centers.pkl', 'rb') as f: # TODO args
+    with open(args.ccpath, 'rb') as f:
         cluster_centers = pickle.load(f)
-    num_iters = 1000 # TODO args
+    num_iters = args.num_iters
     d = 16
-    k = 16 # TODO args
-    decimation = True
+    k = args.k 
+    decimation = args.dec
     
     model_class = models_with_args[model_name]
     loss_fn =  nn.BCEWithLogitsLoss()

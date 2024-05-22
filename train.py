@@ -12,6 +12,8 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 import pytorch_lightning as pl
 
+import argparse
+
 
 def nonincremental_train(model,
                    dataset,
@@ -19,7 +21,8 @@ def nonincremental_train(model,
                    max_epochs,
                    grad_clip,
                    num_iters,
-                   logger):
+                   logger,
+                   checkpoint):
 
     model.num_iters = num_iters
     data = Sat_datamodule(dataset, batch_size)
@@ -28,6 +31,7 @@ def nonincremental_train(model,
                          accelerator="gpu", devices=1,
                          gradient_clip_val=grad_clip)
     trainer.fit(model, data)
+    trainer.save_checkpoint(checkpoint)
     return model
 
 # incremental training
@@ -37,7 +41,8 @@ def incremental_train(model,
                     max_epochs,
                     grad_clip,
                     num_steps,
-                    logger): 
+                    logger,
+                    checkpoint): 
     train_dataset = Sat_datamodule.group_data(dataset[0])
     val_dataset = Sat_datamodule.group_data(dataset[1])
     train_sizes = sorted(train_dataset.keys())
@@ -85,9 +90,16 @@ def incremental_train(model,
         t_diff = end-start
         res = trainer.validate(model, data.test_dataloader())
         results_per_size.append((res,t_diff))
-    return results_per_size
+    trainer.save_checkpoint(checkpoint)
+    return results_per_size,model
                              
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run training')
+    parser.add_argument('--checkpoint', type=str, help='Path to model checkpoint')
+    parser.add_argument('--datapath', type=str, help='Path to SAT data directory')
+    parser.add_argument('--incremental', default=True, type=int, help='Whether to run incremental training')
+    args = parser.parse_args()
+
     seed = 0
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -98,10 +110,10 @@ if __name__ == '__main__':
     model_name = 'NeuroSAT'
     logger = TensorBoardLogger("temp/tb_logs", name="Final",)
 
-    checkpoint = None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
-    data_path = 'temp/cnfs/selsam_3_40'
+    checkpoint = args.checkpoint #None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
+    data_path = args.datapath
     
-    incremental = True
+    incremental = args.incremental
     batch_size = 128
     gpus = [0]
     grad_clip = 0.65
@@ -116,25 +128,28 @@ if __name__ == '__main__':
                     lr, 
                     weight_decay,
                     loss_fn)
-    if checkpoint:
-        model = model.load_from_checkpoint(checkpoint)
+    #if checkpoint:
+    #    model = model.load_from_checkpoint(checkpoint)
 
     if incremental:
-        results = incremental_train(model,
+        results,model = incremental_train(model,
                                            dataset,
                                            batch_size,
                                            max_epochs,
                                            grad_clip,
                                            num_iters,
-                                           logger)   
+                                           logger,
+                                           checkpoint)   
         # save results to pickle file
         with open('temp/incremental_results.pkl','wb') as f:
             pickle.dump(results, f)                              
     else:
         model = nonincremental_train(model,
                             dataset,
-                            batch_size,
+                           batch_size,
                             max_epochs,
                             grad_clip,
                             num_iters,
-                            logger)
+                            logger,
+                            checkpoint)
+     

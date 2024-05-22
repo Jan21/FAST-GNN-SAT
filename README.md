@@ -1,29 +1,42 @@
 # Installs
-```
-conda create --prefix ./cenv python=3.7
-pip install pytorch-lightning==1.9.0
-pip install pyg-lib torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
-````
-if you want to download satcomp problems use this database tool
-```
-pip install gbd-tools
-```
- 
-if you run download_satcomp.py it will start downloading (it assumes however that you have a local conda env in ./cenv, as in the instructions above)
+pip install torch_geometric
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cu118.html
+pip install pytorch-lightning
+cd FAST-GNN-SAT/PyMiniSolvers/
+!make
+cd ..
 
-For the selsam problems run this first
+### Generate data
 ```
-git clone https://github.com/liffiton/PyMiniSolvers.git
-cd PyMiniSolvers
-make
+To generate random dataset run:
+
+1_generate_problems.sh 
+
+This will create random train, validation and test data.
+
 ```
-# Generate data
+### Train or finetune
 ```
-sh generate_problems.sh
+Model is trained with:
+
+2_train.sh
+
+This will train the model and save he checkpoint. It is the way result in Fig 2 in the paper was obtained. The script runs the experiment with curriculum. To run the experiment without curriculum, uncomment the second line and comment out the first.
+
 ```
-# Train or finetune
+### Compute cluster centers and test
 ```
-python IGNN_sat.py
+After model is trained run:
+
+3_copmute_cluster_centers.sh
+
+Computes cluster centers for true and false
+
+and
+
+4_test.sh
+
+Will use the trained model to evaluate the result (only for SR(40) for other datasets uncomment the other lines in the script).
+
 ```
-hyperparameters of training are defined in the bottom of the file
 
