@@ -6,8 +6,12 @@ from torch_sparse import SparseTensor
 import pytorch_lightning as pl
 from os import listdir
 import os.path as osp
+import numpy as np
 from collections import defaultdict
 import PyMiniSolvers.minisolvers as minisolvers
+from pysat.solvers import Glucose3
+
+from pyunigen import Sampler
 
 __all__ = ['solve_sat']
 
@@ -29,7 +33,7 @@ def solve_sat(n_vars, iclauses):
 class Problem(Data):
     # a Problem is a bipartite graph
 
-    def __init__(self, edge_index=None, x_l=None, x_c=None, y=None):
+    def __init__(self, edge_index=None, x_l=None, x_c=None, y=None, clauses = None, sat_assignment=None, sampled_solutions=None):
         # edge_index is a bipartite adjacency matrix between lits and clauses
         # x_l is the feature vector of the lits nodes
         # x_c is the feature vector of the clauses nodes
@@ -40,6 +44,8 @@ class Problem(Data):
         self.x_l = x_l
         self.x_c = x_c
         self.y = y
+        self.sat_assignment = sat_assignment
+        self.sampled_solutions = sampled_solutions
 
         self.num_literals = x_l.size(0) if x_l is not None else 0
         self.num_clauses = x_c.size(0) if x_c is not None else 0
@@ -56,6 +62,8 @@ class Problem(Data):
         self.num_vars = self.num_literals // 2
 
         self.num_nodes = self.num_literals + self.num_clauses
+
+        self.clauses = clauses
 
     def __inc__(self, key, value,store):
         if key == 'edge_index':
@@ -113,6 +121,9 @@ class InMemorySATDataset(InMemoryDataset):
 
             y, _ = solve_sat(n_vars, clauses) # get problem label (sat/unsat)
 
+            if y == False: 
+                continue
+                        
             # create graph instance (Problem)
             p = self.create_problem(n_vars, clauses, y)
 
@@ -166,7 +177,34 @@ class InMemorySATDataset(InMemoryDataset):
         # convert edge_index to tensor
         edge_index = torch.tensor(edge_index, dtype=torch.long)
 
-        return Problem(edge_index, x_l, x_c, y)
+        if y:
+            solver = Glucose3()
+            for clause in clauses:
+                solver.add_clause(clause)
+            solver.solve()
+            satisfying_assignment = solver.get_model()
+
+            s = Sampler()
+            for cl in clauses:
+                s.add_clause(cl)
+            _, _, samples = s.sample(num=10)
+
+            unique_samples = []        
+            for sample in samples:
+                if sample not in unique_samples:
+                    unique_samples.append(sample)
+            
+
+            #cat_unique_samples = []
+            #for sample in unique_samples:
+            #    cat_unique_samples+=sample
+            #torch.tensor(np.sign(cat_unique_samples), dtype=torch.float)
+            samples_tensor = torch.tensor(np.sign(samples), dtype=torch.float).permute(1, 0)
+
+            prob = Problem(edge_index, x_l, x_c, y, clauses, torch.tensor(np.sign(satisfying_assignment), dtype=torch.float), samples_tensor) #
+            print(prob)
+            return prob
+        return Problem(edge_index, x_l, x_c, y, clauses)
 
     def from_lit_to_idx(self, lit, n_vars):
         # from a literal in range {1,...n_vars,-1,...,-n_vars} get the literal
