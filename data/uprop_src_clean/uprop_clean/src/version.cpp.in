@@ -1,9 +1,0 @@
-/*
- * File:  version.cpp.in
- * Created on:  Tue Aug 10 13:58:47 CEST 2021
- */
-#include "version.h"
-
-const std::string Version::GIT_SHA1           = "@GIT_SHA1@";
-const std::string Version::GIT_DATE           = "@GIT_DATE@";
-const std::string Version::GIT_COMMIT_SUBJECT = "@GIT_COMMIT_SUBJECT@";

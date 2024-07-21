@@ -1,4 +1,4 @@
-from .neurosat_architecture import NeuroSAT
+from .neurosat_architecture import NeuroSAT, NeuroSATRNN
 
 models_with_args = {
 
@@ -8,6 +8,14 @@ models_with_args = {
             'd': 16,
             'final_reducer':'mean',
             }
+    },
+        'NeuroSATRNN': {
+                'model_class': NeuroSATRNN,
+                'model_args':{
+                'd': 32,
+                'final_reducer':'mean',
+                }
     }
+
                        
     }
