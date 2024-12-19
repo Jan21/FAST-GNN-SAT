@@ -10,7 +10,7 @@ import random
 import time
 import pickle
 from torch_geometric.loader import DataLoader
-from datasets.cnf_data import Problem, Sat_datamodule, solve_sat, InMemorySATDataset
+from data.cnf_data import Problem, Sat_datamodule, solve_sat, InMemorySATDataset
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 import pytorch_lightning as pl

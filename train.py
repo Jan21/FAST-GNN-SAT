@@ -7,7 +7,7 @@ import numpy as np
 import random
 import time
 import pickle
-from datasets.cnf_data import get_CNF_dataset, Sat_datamodule
+from data.cnf_data import get_CNF_dataset, Sat_datamodule
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 import pytorch_lightning as pl
@@ -110,8 +110,8 @@ if __name__ == '__main__':
     model_name = 'NeuroSAT'
     logger = TensorBoardLogger("temp/tb_logs", name="Final",)
 
-    checkpoint = args.checkpoint #None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
-    data_path = args.datapath
+    checkpoint = "final_model_checkpoint.ckpt" #args.checkpoint #None #'lightning_logs/version_679/checkpoints/epoch=49-step=3950.ckpt'
+    data_path =  args.datapath #"/home/jan/projects/CIIRC/backdoors/FAST-GNN-SAT/temp/cnfs/selsam_3_40"
     
     incremental = args.incremental
     batch_size = 128

@@ -9,7 +9,7 @@ import time
 import pickle
 import tqdm
 import os
-from datasets.cnf_data import get_CNF_dataset, InMemorySATDataset
+from data.cnf_data import get_CNF_dataset, InMemorySATDataset
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 import pytorch_lightning as pl
